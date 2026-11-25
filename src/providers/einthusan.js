@@ -1,6 +1,6 @@
 /**
  * Einthusan Direct Provider for Nuvio
- * Uses dedicated Oregon cloud relay to eliminate ISP and CDN geoblocking.
+ * Powered by dedicated Oregon Cloud Relay
  */
 var TMDB_KEY = "1b3113663c9004682ed61086cf967c44";
 var TMDB_BASE = "https://api.themoviedb.org/3";
@@ -22,7 +22,7 @@ async function fetchMetadata(tmdbId, type) {
 }
 
 async function getStreams(tmdbId, mediaType, season, episode) {
-  console.log("[Einthusan] Processing ID: " + tmdbId);
+  console.log("[Einthusan] Processing: " + tmdbId);
   try {
     var meta;
     if (/^\d+$/.test(tmdbId)) {
@@ -32,8 +32,6 @@ async function getStreams(tmdbId, mediaType, season, episode) {
     }
 
     if (!meta || !meta.title) return [];
-
-    console.log("[Einthusan] Resolving: " + meta.title);
 
     var langMap = {
       ta: "tamil",
@@ -47,31 +45,27 @@ async function getStreams(tmdbId, mediaType, season, episode) {
     };
     var section = langMap[meta.lang] || "tamil";
 
-    // Query Oregon Cloud Relay (no ISP block, no geoblock)
     var reqUrl = RELAY_BASE + "/resolve?title=" + encodeURIComponent(meta.title) + "&lang=" + encodeURIComponent(section);
     console.log("[Einthusan] Calling Relay: " + reqUrl);
 
     var resp = await fetch(reqUrl);
     if (!resp.ok) {
-      console.log("[Einthusan] Relay returned status: " + resp.status);
+      console.log("[Einthusan] Relay returned error: " + resp.status);
       return [];
     }
 
     var result = await resp.json();
     if (!result || !result.streamUrl) {
-      console.log("[Einthusan] No streamUrl in relay response.");
+      console.log("[Einthusan] No streamUrl in response.");
       return [];
     }
 
-    // Stream URL proxied through high-speed relay so it works without VPN in India
-    var streamPlayUrl = RELAY_BASE + "/proxy?url=" + encodeURIComponent(result.streamUrl);
-
-    console.log("[Einthusan] Stream Ready: " + result.title);
+    console.log("[Einthusan] Successfully resolved: " + result.streamUrl);
 
     return [{
       name: "Einthusan (Direct)",
-      title: "Einthusan HD • [Cloud Relay 1080p]",
-      url: streamPlayUrl,
+      title: "Einthusan HD • 1080p [Direct HLS]",
+      url: result.streamUrl,
       quality: "1080p",
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
