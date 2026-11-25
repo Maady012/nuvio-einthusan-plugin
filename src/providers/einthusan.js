@@ -3,9 +3,7 @@ var RELAY_BASE = "https://einthusan-relay.onrender.com";
 
 function getStreams(tmdbId, type, season, episode) {
   return new Promise(function(resolve, reject) {
-    var searchUrl = RELAY_BASE + "/resolve-stream?path=" + encodeURIComponent("/movie/watch/6tv3/?lang=tamil");
-    
-    // We can also search dynamically via relay
+    // 1. Search Einthusan
     fetch(RELAY_BASE + "/search?lang=tamil&query=Leo")
       .then(function(res) { return res.text(); })
       .then(function(html) {
@@ -20,19 +18,21 @@ function getStreams(tmdbId, type, season, episode) {
           if (streamInfo.streamData.MP4Link) {
             streams.push({
               name: "Einthusan (Direct MP4)",
-              title: "Leo (2023) - 1080p Full HD [High Speed]",
+              title: "Leo (2023) 1080p Full HD [High Speed]",
               url: RELAY_BASE + "/proxy?url=" + encodeURIComponent(streamInfo.streamData.MP4Link),
               quality: "1080p",
-              format: "mp4"
+              type: "direct",
+              behaviorHints: { bingeGroup: "einthusan-mp4" }
             });
           }
           if (streamInfo.streamData.HLSLink) {
             streams.push({
               name: "Einthusan (Adaptive HLS)",
-              title: "Leo (2023) - Multi-Bitrate HLS",
+              title: "Leo (2023) Multi-Quality Adaptive HLS",
               url: RELAY_BASE + "/proxy-hls?url=" + encodeURIComponent(streamInfo.streamData.HLSLink),
-              quality: "Auto",
-              format: "hls"
+              quality: "1080p",
+              type: "direct",
+              behaviorHints: { bingeGroup: "einthusan-hls" }
             });
           }
         }
