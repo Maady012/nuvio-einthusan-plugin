@@ -1,6 +1,6 @@
 // Einthusan Scraper for Nuvio Local Scrapers (React Native Hermes compatible)
 var RELAY_BASE = "https://einthusan-relay.onrender.com";
-var TMDB_KEY = "45dbdd5643f112d31135c359d3334748";
+var TMDB_KEY = "439c478a771f35c05022f9feabcca01c";
 
 var LANG_MAP = {
   "ta": "tamil",
@@ -19,11 +19,10 @@ function getStreams(tmdbId, type, season, episode) {
       return resolve([]);
     }
 
-    // 1. Fetch title and original_language from TMDB using tmdbId
+    // 1. Fetch title and original_language from TMDB using working API key
     var tmdbUrl = "https://api.themoviedb.org/3/movie/" + tmdbId + "?api_key=" + TMDB_KEY;
     fetch(tmdbUrl)
       .then(function(r) { return r.json(); })
-      .catch(function(err) { return null; })
       .then(function(movie) {
         if (!movie || (!movie.title && !movie.original_title)) {
           return resolve([]);
@@ -32,6 +31,7 @@ function getStreams(tmdbId, type, season, episode) {
         var title = movie.title || movie.original_title;
         var origLang = movie.original_language || "ta";
         var einthusanLang = LANG_MAP[origLang] || "tamil";
+        // Clean special characters
         var cleanTitle = title.replace(/[^a-zA-Z0-9 ]/g, " ").trim();
 
         // 2. Search Einthusan dynamically for THIS specific movie
@@ -41,7 +41,7 @@ function getStreams(tmdbId, type, season, episode) {
           .then(function(html) {
             // Find watch links
             var match = html.match(/\/movie\/watch\/[a-zA-Z0-9]+\/\?lang=[a-z]+/);
-            // Fallback to Tamil search if not found
+            // Fallback to Tamil search if not found in original language
             if (!match && einthusanLang !== "tamil") {
               return fetch(RELAY_BASE + "/search?lang=tamil&query=" + encodeURIComponent(cleanTitle))
                 .then(function(r) { return r.text(); })
@@ -73,7 +73,7 @@ function getStreams(tmdbId, type, season, episode) {
               if (streamInfo.streamData.MP4Link) {
                 streams.push({
                   name: "Einthusan (Direct MP4)",
-                  title: movieTitle + " - 1080p Ultra-Fast [Zero Relay Bandwidth]",
+                  title: movieTitle + " - 1080p Ultra-Fast [Direct CDN]",
                   url: streamInfo.streamData.MP4Link,
                   quality: "1080p",
                   type: "direct",
