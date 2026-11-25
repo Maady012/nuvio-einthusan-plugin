@@ -36,7 +36,6 @@ function getStreams(tmdbId, type, season, episode) {
           .then(function(res) { return res.text(); })
           .then(function(html) {
             var match = html.match(/\/movie\/watch\/[a-zA-Z0-9]+\/\?lang=[a-z]+/);
-            // If not found in original language, try Tamil as fallback
             if (!match && einthusanLang !== "tamil") {
               return fetch(RELAY_BASE + "/search?lang=tamil&query=" + encodeURIComponent(cleanTitle))
                 .then(function(r) { return r.text(); })
@@ -61,16 +60,28 @@ function getStreams(tmdbId, type, season, episode) {
           .then(function(streamInfo) {
             var streams = [];
             if (streamInfo && streamInfo.streamData) {
+              // 1. DIRECT CDN link (Zero relay bandwidth! Stream goes directly from Einthusan CDN to device)
               if (streamInfo.streamData.MP4Link) {
                 streams.push({
-                  name: "Einthusan (Direct MP4)",
-                  title: movieTitle + " - 1080p Full HD [High Speed]",
+                  name: "Einthusan (Direct CDN)",
+                  title: movieTitle + " - 1080p Ultra-Fast [Zero Relay Bandwidth]",
+                  url: streamInfo.streamData.MP4Link,
+                  quality: "1080p",
+                  type: "direct",
+                  behaviorHints: { bingeGroup: "einthusan-cdn-direct" }
+                });
+                
+                // 2. Relay Fallback (in case an ISP blocks direct CDN IP)
+                streams.push({
+                  name: "Einthusan (Relay Proxy)",
+                  title: movieTitle + " - 1080p Full HD [Bypass Proxy]",
                   url: RELAY_BASE + "/proxy?url=" + encodeURIComponent(streamInfo.streamData.MP4Link),
                   quality: "1080p",
                   type: "direct",
-                  behaviorHints: { bingeGroup: "einthusan-mp4" }
+                  behaviorHints: { bingeGroup: "einthusan-proxy" }
                 });
               }
+
               if (streamInfo.streamData.HLSLink) {
                 streams.push({
                   name: "Einthusan (Adaptive HLS)",
