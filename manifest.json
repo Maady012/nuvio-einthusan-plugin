@@ -1,0 +1,27 @@
+{
+  "name": "Einthusan Provider for Nuvio",
+  "version": "1.0.0",
+  "scrapers": [
+    {
+      "id": "einthusan",
+      "name": "Einthusan (Direct)",
+      "description": "Direct Tamil & Indian HD streaming from Einthusan with instant playback.",
+      "version": "1.0.0",
+      "author": "Maddy",
+      "supportedTypes": [
+        "movie"
+      ],
+      "filename": "src/providers/einthusan.js",
+      "enabled": true,
+      "logo": "https://einthusan.tv/favicon.ico",
+      "contentLanguage": [
+        "ta",
+        "hi",
+        "te",
+        "ml",
+        "kn"
+      ],
+      "supportsExternalPlayer": true
+    }
+  ]
+}
