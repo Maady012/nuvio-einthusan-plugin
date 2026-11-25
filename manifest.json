@@ -1,12 +1,12 @@
 {
   "name": "Einthusan Provider for Nuvio",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "scrapers": [
     {
       "id": "einthusan",
       "name": "Einthusan (Direct)",
       "description": "Direct Tamil & Indian HD streaming from Einthusan with instant playback.",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "author": "Maddy",
       "supportedTypes": [
         "movie"

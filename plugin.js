@@ -19,7 +19,6 @@ function getStreams(tmdbId, type, season, episode) {
       return resolve([]);
     }
 
-    // 1. Fetch title and original_language from TMDB using working API key
     var tmdbUrl = "https://api.themoviedb.org/3/movie/" + tmdbId + "?api_key=" + TMDB_KEY;
     fetch(tmdbUrl)
       .then(function(r) { return r.json(); })
@@ -31,17 +30,13 @@ function getStreams(tmdbId, type, season, episode) {
         var title = movie.title || movie.original_title;
         var origLang = movie.original_language || "ta";
         var einthusanLang = LANG_MAP[origLang] || "tamil";
-        // Clean special characters
         var cleanTitle = title.replace(/[^a-zA-Z0-9 ]/g, " ").trim();
 
-        // 2. Search Einthusan dynamically for THIS specific movie
         var searchUrl = RELAY_BASE + "/search?lang=" + einthusanLang + "&query=" + encodeURIComponent(cleanTitle);
         return fetch(searchUrl)
           .then(function(res) { return res.text(); })
           .then(function(html) {
-            // Find watch links
             var match = html.match(/\/movie\/watch\/[a-zA-Z0-9]+\/\?lang=[a-z]+/);
-            // Fallback to Tamil search if not found in original language
             if (!match && einthusanLang !== "tamil") {
               return fetch(RELAY_BASE + "/search?lang=tamil&query=" + encodeURIComponent(cleanTitle))
                 .then(function(r) { return r.text(); })
@@ -63,31 +58,30 @@ function getStreams(tmdbId, type, season, episode) {
         var watchPath = data.match[0];
         var movieTitle = data.title;
 
-        // 3. Resolve authenticated stream for THIS specific movie path
         return fetch(RELAY_BASE + "/resolve-stream?path=" + encodeURIComponent(watchPath))
           .then(function(res) { return res.json(); })
           .then(function(streamInfo) {
             var streams = [];
             if (streamInfo && streamInfo.streamData) {
-              // Direct CDN link (0 relay bandwidth)
+              // 1. Primary: 100% Reliable Relay Proxy (Works for ALL movies regardless of ISP/CDN geoblocks)
               if (streamInfo.streamData.MP4Link) {
                 streams.push({
-                  name: "Einthusan (Direct MP4)",
-                  title: movieTitle + " - 1080p Ultra-Fast [Direct CDN]",
-                  url: streamInfo.streamData.MP4Link,
-                  quality: "1080p",
-                  type: "direct",
-                  behaviorHints: { bingeGroup: "einthusan-cdn-" + tmdbId }
-                });
-
-                // Relay Proxy Fallback
-                streams.push({
                   name: "Einthusan (Relay Proxy)",
-                  title: movieTitle + " - 1080p Full HD [Bypass Proxy]",
+                  title: movieTitle + " - 1080p Full HD [High Speed]",
                   url: RELAY_BASE + "/proxy?url=" + encodeURIComponent(streamInfo.streamData.MP4Link),
                   quality: "1080p",
                   type: "direct",
                   behaviorHints: { bingeGroup: "einthusan-proxy-" + tmdbId }
+                });
+
+                // 2. Direct CDN (Only accessible on certain ISPs/unblocked CDN nodes)
+                streams.push({
+                  name: "Einthusan (Direct CDN)",
+                  title: movieTitle + " - 1080p Direct [Unfiltered]",
+                  url: streamInfo.streamData.MP4Link,
+                  quality: "1080p",
+                  type: "direct",
+                  behaviorHints: { bingeGroup: "einthusan-cdn-" + tmdbId }
                 });
               }
 
